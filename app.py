@@ -1,77 +1,22 @@
 import streamlit as st
+import requests
 
 # ==========================================
-# CONFIGURACIÓN
+# IP PICO W
+# ==========================================
+
+PICO_IP="192.168.1.50"
+
+# ==========================================
+# CONFIG
 # ==========================================
 
 st.set_page_config(
-    page_title="Control 6 LEDs Pico W",
-    layout="centered"
+    page_title="Pico W LEDs"
 )
 
 # ==========================================
-# CSS
-# ==========================================
-
-st.markdown("""
-<style>
-
-.main{
-    background-color:#EAEAEA;
-}
-
-.block-container{
-    max-width:900px;
-    padding-top:1rem;
-}
-
-.titulo{
-    text-align:center;
-    font-size:40px;
-    font-weight:bold;
-    color:#008080;
-}
-
-.subtitulo{
-    text-align:center;
-    font-size:18px;
-}
-
-.panel{
-    background:white;
-    padding:25px;
-    border-radius:15px;
-    border:1px solid #BDBDBD;
-}
-
-.led_on{
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    background-color:#00FF00;
-    margin:auto;
-    box-shadow:0px 0px 20px #00FF00;
-}
-
-.led_off{
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    background-color:#404040;
-    margin:auto;
-}
-
-.estado{
-    text-align:center;
-    font-size:20px;
-    font-weight:bold;
-}
-
-</style>
-""",unsafe_allow_html=True)
-
-# ==========================================
-# VARIABLES SESSION
+# SESSION
 # ==========================================
 
 if "leds" not in st.session_state:
@@ -82,33 +27,8 @@ if "leds" not in st.session_state:
 # TITULO
 # ==========================================
 
-st.markdown(
-    """
-    <div class='titulo'>
-    Raspberry Pi Pico W
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    """
-    <div class='subtitulo'>
-    Control de 6 LEDs
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown("<br>",unsafe_allow_html=True)
-
-# ==========================================
-# PANEL
-# ==========================================
-
-st.markdown(
-    "<div class='panel'>",
-    unsafe_allow_html=True
+st.title(
+    "Control LEDs Raspberry Pi Pico W"
 )
 
 # ==========================================
@@ -117,92 +37,61 @@ st.markdown(
 
 for i in range(6):
 
-    col1,col2,col3=st.columns([1,1,1])
+    st.subheader(f"LED {i}")
 
-    with col1:
+    c1,c2=st.columns(2)
 
-        st.markdown(
-            f"### LED {i}"
-        )
+    # ======================================
+    # ON
+    # ======================================
 
-    with col2:
+    with c1:
 
-        if st.session_state.leds[i]:
+        if st.button(
+            f"ON {i}"
+        ):
 
-            st.markdown(
-                "<div class='led_on'></div>",
-                unsafe_allow_html=True
-            )
+            try:
 
-        else:
-
-            st.markdown(
-                "<div class='led_off'></div>",
-                unsafe_allow_html=True
-            )
-
-    with col3:
-
-        c1,c2=st.columns(2)
-
-        with c1:
-
-            if st.button(
-                "ON",
-                key=f"on{i}"
-            ):
+                requests.get(
+                    f"http://{PICO_IP}/led{i}/on"
+                )
 
                 st.session_state.leds[i]=1
 
-        with c2:
+            except:
 
-            if st.button(
-                "OFF",
-                key=f"off{i}"
-            ):
+                st.error(
+                    "Error conexión Pico W"
+                )
+
+    # ======================================
+    # OFF
+    # ======================================
+
+    with c2:
+
+        if st.button(
+            f"OFF {i}"
+        ):
+
+            try:
+
+                requests.get(
+                    f"http://{PICO_IP}/led{i}/off"
+                )
 
                 st.session_state.leds[i]=0
 
-    estado="ENCENDIDO" if st.session_state.leds[i] else "APAGADO"
+            except:
 
-    st.markdown(
-        f"""
-        <div class='estado'>
-        {estado}
-        </div>
-        """,
-        unsafe_allow_html=True
+                st.error(
+                    "Error conexión Pico W"
+                )
+
+    estado="ON" if st.session_state.leds[i] else "OFF"
+
+    st.write(
+        "Estado:",
+        estado
     )
-
-    st.markdown("---")
-
-# ==========================================
-# BOTONES GENERALES
-# ==========================================
-
-a,b=st.columns(2)
-
-with a:
-
-    if st.button(
-        "ENCENDER TODOS"
-    ):
-
-        st.session_state.leds=[1]*6
-
-        st.rerun()
-
-with b:
-
-    if st.button(
-        "APAGAR TODOS"
-    ):
-
-        st.session_state.leds=[0]*6
-
-        st.rerun()
-
-st.markdown(
-    "</div>",
-    unsafe_allow_html=True
-)
